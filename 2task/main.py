@@ -1,67 +1,87 @@
-from sympy import solve, symbols, Matrix, re
 import numpy as np
 
-import matplotlib.pyplot as plt
-
-from copy import deepcopy
+from matplotlib import pyplot as plt
 
 
-x, y, k1, k_1, k3, k_3, k2 = symbols('x y k1 k_1 k3 k_3 k2')
+grid_power = 1000
 
 
-def one_param_analisys(
-    f1,
-    f2,
-    param_values
-):
-    jac_A = Matrix([f1, f2]).jacobian(Matrix([x, y]))
+def one_parameter_analisys():
+    k1 = 1
+    k_1 = 0.01
+    k3 = 0.0032
+    k_3 = 2
 
-    param_dict = deepcopy(param_values)
-    del param_dict[k2]
+    x = np.linspace(0, 0.999, grid_power)
+    y = np.zeros(grid_power)
+    k2 = np.zeros(grid_power)
 
-    f1_filled = f1.subs([(key, val) for key, val in param_dict.items()])
-    f2_filled = f2.subs([(key, val) for key, val in param_dict.items()])
+    s = np.zeros(grid_power)
+    jac = np.zeros(grid_power)
+    D = np.zeros(grid_power)
 
-    sol = solve([f1_filled, f2_filled], x, k2, dict=True)[0]
-    y_grid = np.linspace(0.001, 1, 1000, endpoint=True)
+    y_hopf = []
+    x_hopf = []
+    k2_hopf = []
 
-    k2_arr = np.array([ sol[k2].subs({ y: elem }) for elem in y_grid ])
-    x_arr = np.array([ sol[x].subs({ y: elem }) for elem in y_grid ])
+    y_saddle_node = []
+    x_saddle_node = []
+    k2_saddle_node = []
 
-    jac_value = jac_A.subs([ (key, value) for key, value in param_dict.items() ])
-    eigenvals = jac_value.eigenvals().keys()
+    y_node = []
+    x_node = []
+    k2_node = []
 
-    y_features = []
+    for i in range(1, grid_power):
+        y[i] = k3 * x[i] / k_3
+        k2[i] = (k1 * (1 - x[i] - y[i]) - k_1 * x[i] - k3 * x[i] + k_3 * y[i]) / (x[i] * ((1 - x[i] - y[i]) ** 2))
 
-    for i, val in enumerate(eigenvals):
-        eigenval = val.subs({ k2: sol[k2], x: sol[x] })
-        y_arr = np.array([ re(eigenval.subs({ y: elem })) for elem in y_grid ])
-        y_features.extend([ y_grid[j] for j in range(len(y_arr) - 1) if y_arr[i] * y_arr[i + 1] < 0 ])
+        a11 = - k1 - k_1 - k3 - k2[i] * ((1 - x[i] - y[i]) ** 2) + 2 * x[i] * k2[i] * (1 - x[i] - y[i])
+        a12 = - k1 + k_3 + 2 * x[i] * k2[i] * (1 - x[i] - y[i])
+        a21 = k3
+        a22 = - k_3
 
-    k1_features = [ sol[k2].subs({ y: elem }) for elem in y_features ]
-    x_features = [ sol[x].subs({ y: elem }) for elem in y_features ]
+        s[i] = a11 + a22
+        jac[i] = a11 * a22 - a12 * a21
+        D[i] = s[i] ** 2 - 4 * jac[i]
 
-    plt.plot(k2_arr, y_grid, linewidth=1.5, label='multi')
-    plt.plot(k2_arr, x_arr, linestyle='--', linewidth=1.5, label='neutral')
+        if i == 1:
+            fig_1 = plt.figure()
+            continue
 
-    plt.plot(k1_features, y_features, 'ro')
-    plt.plot(k1_features, x_features, 'X')
+        if s[i] * s[i - 1] <= 0:
+            y_hopf.append(y[i])
+            x_hopf.append(x[i])
+            k2_hopf.append(k2[i])
 
-    plt.xlabel(r'$k2$')
-    plt.ylabel(r'$x, y$')
-    plt.xlim([0, 8])
-    plt.ylim([0, 1])
+            plt.plot(k2[i], x[i], 'go', label='hopf')
+            plt.plot(k2[i], y[i], 'go', label='hopf')
+
+        if jac[i] * jac[i - 1] <= 0:
+            y_saddle_node.append(y[i])
+            x_saddle_node.append(x[i])
+            k2_saddle_node.append(k2[i])
+
+            plt.plot(k2[i], x[i], 'r*', label='saddle-node')
+            plt.plot(k2[i], y[i], 'r*', label='saddle-node')
+
+        if D[i] * D[i - 1] <= 0:
+            y_node.append(y[i])
+            x_node.append(x[i])
+            k2_node.append(k2[i])
+
+            plt.plot(k2[i], x[i], 'b^', label='node')
+            plt.plot(k2[i], y[i], 'b^', label='node')
+
+    x_plot = fig_1.add_subplot(111)
+    x_plot.plot(k2, x, label='k2(x)')
+
+    y_plot = fig_1.add_subplot(111)
+    y_plot.plot(k2, y, label='k2(y)')
+
+    plt.title("One-parameter analisys")
     plt.show()
 
 
-def main():
-    param_values = { k1: 1, k_1: 0.01, k3: 0.0032, k_3: 0.0002, k2: 2 }
-
-    dxdt = k1 * (1 - x - y) - k_1 * x - k3 * x + k_3 * y - k2 * ((1 - x - y) ** 2) * x
-    dydt = k3 * x - k_3 * y
-
-    one_param_analisys(dxdt, dydt, param_values)
-
-
 if __name__ == "__main__":
-    main()
+    one_parameter_analisys()
