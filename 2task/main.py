@@ -14,8 +14,6 @@ def one_parameter_analysis(f1, f2, param_values):
     One-parameter analysis
     The analysis is performed by parameter k2
     """
-    fig = plt.figure()
-
     jac_A = Matrix([f1, f2]).jacobian(Matrix([x, y]))
 
     param_dict = deepcopy(param_values)
@@ -26,7 +24,7 @@ def one_parameter_analysis(f1, f2, param_values):
 
     solution = solve([f1_subs, f2_subs], x, k2, dict=True)[0]
 
-    y_list = np.linspace(0, 0.999, 1000)
+    y_list = np.linspace(0, 1, 1000)
 
     x_list = []
     k2_list = []
@@ -46,14 +44,9 @@ def one_parameter_analysis(f1, f2, param_values):
         trace_list.append(trace(jac))
 
     for i in range(2, len(det_list)):
-        try:
-            if det_list[i] * det_list[i - 1] <= 0:
-                plt.plot(k2_list[i], x_list[i], 'r*', label='saddle-node')
-                plt.plot(k2_list[i], y_list[i], 'r*', label='saddle-node')
-        except Exception:
-            print(det_list[i])
-            print(det_list[i - 1])
-            raise
+        if det_list[i] * det_list[i - 1] <= 0:
+            plt.plot(k2_list[i], x_list[i], 'r*', label='saddle-node')
+            plt.plot(k2_list[i], y_list[i], 'r*', label='saddle-node')
 
         if trace_list[i] * trace_list[i - 1] <= 0:
             plt.plot(k2_list[i], x_list[i], 'go', label='hopf')
@@ -68,8 +61,35 @@ def one_parameter_analysis(f1, f2, param_values):
     plt.show()
 
 
-def two_parameter_analysis():
-    pass
+def two_parameter_analysis(f1, f2, param_values):
+    """
+    Two-parameter analysis
+    The analysis is performed by parameters k_1 and k2
+    """
+    jac_A = Matrix([f1, f2]).jacobian(Matrix([x, y]))
+    det_A = jac_A.det()
+    trace_A = trace(jac_A)
+
+    param_dict = deepcopy(param_values)
+    del param_dict[k1]
+    del param_dict[k_1]
+
+    y_of_x = solve(f2, y)[0]
+    f1_subs = f1.subs([ y, y_of_x ])
+    k2_of_x = solve(f1, k2)[0]
+
+    multi_line = det_A.subs({ y: y_of_x })
+    k2_multi = solve(multi_line, k2)[0]
+
+    neut_line = trace_A.subs({ y: y_of_x })
+    k2_neut = solve(neut_line, k2)[0]
+
+    k_1_multi = solve(k2_multi - k2_of_x, k1)[0]
+    k_1_neut - solve(k2_neut - k2_of_x, k1)[0]
+
+    k_1_multi_subs = k_1_multi.subs(param_dict.items())
+    k_1_neut_subs = k_1_neut.subs(param_dict,items())
+
 
 
 if __name__ == "__main__":
