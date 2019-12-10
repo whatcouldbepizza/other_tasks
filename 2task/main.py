@@ -168,11 +168,42 @@ def two_parameter_analysis(f1, f2, param_dict):
                               k_3: param_dict[k_3]
                           })
 
-        if re(curr_e1) < 10e-4 and re(curr_e2) < 10e-4:
-            plt.plot(curr_k1, curr_k_1, 'X')
+        if re(curr_e1) < 50e-4 and re(curr_e2) < 50e-4:
+            plt.plot(curr_k1, curr_k_1, 'X', color='g')
+
+    k_1_det_diff = k_1_det.diff(x)
+    k_1_det_diff_func = lambdify([x, y, k2, k3, k_3], k_1_det_diff, 'numpy')
+
+    diff_arr = []
+
+    for i in range(x_grid.shape[0]):
+        if fabs(k_1_det_diff_func(x_grid[i], y_grid[i], param_dict[k2], param_dict[k3], param_dict[k_3])) < 10e-3:
+            diff_arr.append(x_grid[i])
+
+    c_x = sum(diff_arr) / len(diff_arr)
+    c_y = y_of_x_func(c_x, param_dict[k3], param_dict[k_3])
+
+    c_k_1 = k_1_det.subs({
+                             x: c_x,
+                             y: c_y,
+                             k2: param_dict[k2],
+                             k3: param_dict[k3],
+                             k_3: param_dict[k_3]
+                         })
+
+    c_k1 = k1_of_x.subs({
+                            x: c_x,
+                            y: c_y,
+                            k_1: c_k_1,
+                            k2: param_dict[k2],
+                            k3: param_dict[k3],
+                            k_3: param_dict[k_3]
+                        })
 
     plt.plot(k1_trace_subs, k_1_trace_subs, '--', label='neutrality')
     plt.plot(k1_det_subs, k_1_det_subs, label='multiplicity')
+
+    plt.plot(c_k1, c_k_1, 'ro', color='r')
 
     plt.xlabel('k1')
     plt.ylabel('k_1')
