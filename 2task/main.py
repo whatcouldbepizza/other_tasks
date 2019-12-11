@@ -75,19 +75,22 @@ def one_parameter_analysis(f1, f2, param_values):
 
 
 def two_parameter_analysis(f1, f2, param_dict):
+    param1 = k_1
+    param2 = k1
+
     jac_A = Matrix([f1, f2]).jacobian(Matrix([x, y]))
     det_A = jac_A.det()
     trace_A = trace(jac_A)
 
 
     y_of_x = solve(f2, y)[0]
-    k1_of_x = solve(f1, k1)[0]
+    param2_of_x = solve(f1, param2)[0]
 
-    k1_trace = solve(trace_A, k1)[0]
-    k_1_trace = solve(k1_trace - k1_of_x, k_1)[0]
+    param2_trace = solve(trace_A, param2)[0]
+    param1_trace = solve(param2_trace - param2_of_x, param1)[0]
 
-    k1_det = solve(det_A, k1)[0]
-    k_1_det = solve(k1_det - k1_of_x, k_1)[0]
+    param2_det = solve(det_A, param2)[0]
+    param1_det = solve(param2_det - param2_of_x, param1)[0]
 
     x_grid = np.linspace(0, 1, 1000)
 
@@ -105,55 +108,61 @@ def two_parameter_analysis(f1, f2, param_dict):
     x_grid = np.array(new_x_grid)
     y_grid = np.array(new_y_grid)
 
-    k_1_trace_subs = np.zeros(x_grid.shape)
-    k1_trace_subs = np.zeros(x_grid.shape)
-    k_1_det_subs = np.zeros(x_grid.shape)
-    k1_det_subs = np.zeros(x_grid.shape)
+    param1_trace_subs = np.zeros(x_grid.shape)
+    param2_trace_subs = np.zeros(x_grid.shape)
+    param1_det_subs = np.zeros(x_grid.shape)
+    param2_det_subs = np.zeros(x_grid.shape)
 
     for i in range(x_grid.shape[0]):
-        k_1_trace_subs[i] = k_1_trace.subs({
+        param1_trace_subs[i] = param1_trace.subs({
+                                                     x: x_grid[i],
+                                                     y: y_grid[i],
+                                                     k2: param_dict[k2],
+                                                     #k1: param_dict[k1],
+                                                     k3: param_dict[k3],
+                                                     k_3: param_dict[k_3]
+                                                 })
+
+        param2_trace_subs[i] = param2_of_x.subs({
+                                                    x: x_grid[i],
+                                                    y: y_grid[i],
+                                                    k_1: param1_trace_subs[i],
+                                                    k2: param_dict[k2],
+                                                    #k1: param_dict[k1],
+                                                    k3: param_dict[k3],
+                                                    k_3: param_dict[k_3]
+                                                })
+
+        param1_det_subs[i] = param1_det.subs({
+                                                 x: x_grid[i],
+                                                 y: y_grid[i],
+                                                 k2: param_dict[k2],
+                                                 #k1: param_dict[k1],
+                                                 k3: param_dict[k3],
+                                                 k_3: param_dict[k_3]
+                                             })
+
+        param2_det_subs[i] = param2_of_x.subs({
                                                   x: x_grid[i],
                                                   y: y_grid[i],
+                                                  k_1: param1_det_subs[i],
                                                   k2: param_dict[k2],
+                                                  #k1: param_dict[k1],
                                                   k3: param_dict[k3],
                                                   k_3: param_dict[k_3]
                                               })
 
-        k1_trace_subs[i] = k1_of_x.subs({
-                                               x: x_grid[i],
-                                               y: y_grid[i],
-                                               k_1: k_1_trace_subs[i],
-                                               k2: param_dict[k2],
-                                               k3: param_dict[k3],
-                                               k_3: param_dict[k_3]
-                                           })
-
-        k_1_det_subs[i] = k_1_det.subs({
-                                              x: x_grid[i],
-                                              y: y_grid[i],
-                                              k2: param_dict[k2],
-                                              k3: param_dict[k3],
-                                              k_3: param_dict[k_3]
-                                          })
-
-        k1_det_subs[i] = k1_of_x.subs({
-                                             x: x_grid[i],
-                                             y: y_grid[i],
-                                             k_1: k_1_det_subs[i],
-                                             k2: param_dict[k2],
-                                             k3: param_dict[k3],
-                                             k_3: param_dict[k_3]
-                                         })
-
     e1, e2 = jac_A.eigenvals()
 
-    for curr_x, curr_y, curr_k1, curr_k_1 in zip(x_grid, y_grid, k1_trace_subs, k_1_trace_subs):
+    for curr_x, curr_y, curr_param2, curr_param1 in zip(x_grid, y_grid, param2_trace_subs, param1_trace_subs):
         curr_e1 = e1.subs({
                               x: curr_x,
                               y: curr_y,
-                              k1: curr_k1,
-                              k_1: curr_k_1,
+                              k1: curr_param2,
+                              #k2: curr_param2,
+                              k_1: curr_param1,
                               k2: param_dict[k2],
+                              #k1: param_dict[k1],
                               k3: param_dict[k3],
                               k_3: param_dict[k_3]
                           })
@@ -161,54 +170,64 @@ def two_parameter_analysis(f1, f2, param_dict):
         curr_e2 = e2.subs({
                               x: curr_x,
                               y: curr_y,
-                              k1: curr_k1,
-                              k_1: curr_k_1,
+                              k1: curr_param2,
+                              #k2: curr_param2,
+                              k_1: curr_param1,
                               k2: param_dict[k2],
+                              #k1: param_dict[k1],
                               k3: param_dict[k3],
                               k_3: param_dict[k_3]
                           })
 
         if re(curr_e1) < 50e-4 and re(curr_e2) < 50e-4:
-            plt.plot(curr_k1, curr_k_1, 'X', color='g')
+            plt.plot(curr_param2, curr_param1, 'X', color='g')
 
-    k_1_det_diff = k_1_det.diff(x)
-    k_1_det_diff_func = lambdify([x, y, k2, k3, k_3], k_1_det_diff, 'numpy')
+    param1_det_diff = param1_det.diff(x)
+    param1_det_diff_func = lambdify([x, y, k2, k3, k_3], param1_det_diff, 'numpy')
+    #param1_det_diff_func = lambdify([x, y, k1, k3, k_3], param1_det_diff, 'numpy')
 
     diff_arr = []
 
     for i in range(x_grid.shape[0]):
-        if fabs(k_1_det_diff_func(x_grid[i], y_grid[i], param_dict[k2], param_dict[k3], param_dict[k_3])) < 10e-3:
+        if fabs(param1_det_diff_func(x_grid[i], y_grid[i], param_dict[k2], param_dict[k3], param_dict[k_3])) < 10e-3:
+        #if fabs(param1_det_diff_func(x_grid[i], y_grid[i], param_dict[k1], param_dict[k3], param_dict[k_3])) < 10e-3:
             diff_arr.append(x_grid[i])
 
     c_x = sum(diff_arr) / len(diff_arr)
     c_y = y_of_x_func(c_x, param_dict[k3], param_dict[k_3])
 
-    c_k_1 = k_1_det.subs({
-                             x: c_x,
-                             y: c_y,
-                             k2: param_dict[k2],
-                             k3: param_dict[k3],
-                             k_3: param_dict[k_3]
-                         })
+    c_param1 = param1_det.subs({
+                                   x: c_x,
+                                   y: c_y,
+                                   k2: param_dict[k2],
+                                   #k1: param_dict[k1],
+                                   k3: param_dict[k3],
+                                   k_3: param_dict[k_3]
+                               })
 
-    c_k1 = k1_of_x.subs({
-                            x: c_x,
-                            y: c_y,
-                            k_1: c_k_1,
-                            k2: param_dict[k2],
-                            k3: param_dict[k3],
-                            k_3: param_dict[k_3]
-                        })
+    c_param2 = param2_of_x.subs({
+                                    x: c_x,
+                                    y: c_y,
+                                    k_1: c_param1,
+                                    k2: param_dict[k2],
+                                    #k1: param_dict[k1],
+                                    k3: param_dict[k3],
+                                    k_3: param_dict[k_3]
+                                })
 
-    plt.plot(k1_trace_subs, k_1_trace_subs, '--', label='neutrality')
-    plt.plot(k1_det_subs, k_1_det_subs, label='multiplicity')
+    plt.plot(param2_trace_subs, param1_trace_subs, '--', label='neutrality')
+    plt.plot(param2_det_subs, param1_det_subs, label='multiplicity')
 
-    plt.plot(c_k1, c_k_1, 'ro', color='r')
+    plt.plot(c_param2, c_param1, 'ro', color='r')
 
     plt.xlabel('k1')
     plt.ylabel('k_1')
 
     plt.show()
+
+
+def auto_oscillation():
+    pass
 
 
 if __name__ == "__main__":
