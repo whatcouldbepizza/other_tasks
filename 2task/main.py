@@ -75,14 +75,13 @@ def one_parameter_analysis(f1, f2, param_values):
     plt.show()
 
 
-def two_parameter_analysis(f1, f2, param_dict):
+def two_parameter_analysis(f1, f2, param_dict, cond_mult, cond_y, const1, const2):
     param1 = k_1
     param2 = k1
 
     jac_A = Matrix([f1, f2]).jacobian(Matrix([x, y]))
     det_A = jac_A.det()
     trace_A = trace(jac_A)
-
 
     y_of_x = solve(f2, y)[0]
     param2_of_x = solve(f1, param2)[0]
@@ -102,7 +101,7 @@ def two_parameter_analysis(f1, f2, param_dict):
     new_y_grid = []
 
     for curr_x, curr_y in zip(x_grid, y_grid):
-        if 0 <= curr_x + 2 * curr_y <= 1 and 0 <= curr_y <= 1:
+        if 0 <= curr_x + cond_mult * curr_y <= 1 and 0 <= curr_y <= cond_y:
             new_x_grid.append(curr_x)
             new_y_grid.append(curr_y)
 
@@ -180,7 +179,7 @@ def two_parameter_analysis(f1, f2, param_dict):
     #                          k_3: param_dict[k_3]
     #                      })
 
-    #    if re(curr_e1) < 5e-6 and re(curr_e2) < 5e-6:
+    #    if re(curr_e1) < const2 and re(curr_e2) < const2:
     #        pass
     #        #plt.plot(curr_param2, curr_param1, 'X', color='g')
 
@@ -191,7 +190,7 @@ def two_parameter_analysis(f1, f2, param_dict):
     diff_arr = []
 
     for i in range(x_grid.shape[0]):
-        if fabs(param1_det_diff_func(x_grid[i], y_grid[i], param_dict[k2], param_dict[k3], param_dict[k_3])) < 10e-3:
+        if fabs(param1_det_diff_func(x_grid[i], y_grid[i], param_dict[k2], param_dict[k3], param_dict[k_3])) < const1:
         #if fabs(param1_det_diff_func(x_grid[i], y_grid[i], param_dict[k1], param_dict[k3], param_dict[k_3])) < 10e-3:
             diff_arr.append(x_grid[i])
 
@@ -228,50 +227,121 @@ def two_parameter_analysis(f1, f2, param_dict):
     plt.show()
 
 
-def auto_oscillation(f1, f2, param_dict, auto_k1, auto_k_1):
-    def derivate(start, t, arg_k1, arg_k_1, arg_k2, arg_k3, arg_k_3):
-        v1 = start[0]
-        v2 = start[1]
+def derivate(start, t, arg_k1, arg_k_1, arg_k2, arg_k3, arg_k_3, f1, f2):
+    curr_f1 = f1.subs({
+                          x: start[0],
+                          y: start[1],
+                          k1: arg_k1,
+                          k_1: arg_k_1,
+                          k2: arg_k2,
+                          k3: arg_k3,
+                          k_3: arg_k_3
+                      })
 
-        curr_f1 = f1.subs({
-                              x: start[0],
-                              y: start[1],
-                              k1: arg_k1,
-                              k_1: arg_k_1,
-                              k2: arg_k2,
-                              k3: arg_k3,
-                              k_3: arg_k_3
-                          })
+    curr_f2 = f2.subs({
+                          x: start[0],
+                          y: start[1],
+                          k1: arg_k1,
+                          k_1: arg_k_1,
+                          k2: arg_k2,
+                          k3: arg_k3,
+                          k_3: arg_k_3
+                      })
 
-        curr_f2 = f2.subs({
-                              x: start[0],
-                              y: start[1],
-                              k1: arg_k1,
-                              k_1: arg_k_1,
-                              k2: arg_k2,
-                              k3: arg_k3,
-                              k_3: arg_k_3
-                          })
+    return [curr_f1, curr_f2]
 
-        eqs = [curr_f1, curr_f2]
-        return eqs
 
+def phase_portrait(f1, f2, param_dict, auto_k1, auto_k_1, cond_mult, cond_y, solution_a):
+    x_grid = np.linspace(0, 1, 1000)
+
+    y_of_x = solve(f2, y)[0]
+
+    y_of_x_func = lambdify([x, k3, k_3], y_of_x, 'numpy')
+    y_grid_f2 = y_of_x_func(x_grid, param_dict[k3], param_dict[k_3])
+
+    new_x_grid = []
+    new_y_grid = []
+
+    for curr_x, curr_y in zip(x_grid, y_grid_f2):
+        if 0 <= curr_x + cond_mult * curr_y <= 1 and 0 <= curr_y <= cond_y:
+            new_x_grid.append(curr_x)
+            new_y_grid.append(curr_y)
+
+    x_grid = np.array(new_x_grid)
+    y_grid_f2 = np.array(new_y_grid)
+
+    ## f_2(x, y) = 0
+    plt.plot(x_grid, y_grid_f2, 'g')
+
+    y_from_f1 = solve(f1, y)
+    y_from_f1_func = lambdify([x, k1, k_1, k2, k3, k_3], y_from_f1, 'numpy')
+    y_grid_f1 = y_from_f1_func(x_grid, auto_k1, auto_k_1, param_dict[k2], param_dict[k3], param_dict[k_3])
+
+    ## f_1(x, y) = 0
+    plt.plot(x_grid, y_grid_f1[0], 'b')
+    plt.plot(x_grid, y_grid_f1[1], 'b')
+
+    t_grid = np.linspace(0, 10000, 1000)
+
+    start_1 = [0.1, 0.1]
+    solution_1 = odeint(
+                            derivate,
+                            start_1,
+                            t_grid,
+                            args=(auto_k1, auto_k_1, param_dict[k2], param_dict[k3], param_dict[k_3], f1, f2)
+                        )
+
+    start_2 = [0.55, 0.3]
+    solution_2 = odeint(
+                            derivate,
+                            start_2,
+                            t_grid,
+                            args=(auto_k1, auto_k_1, param_dict[k2], param_dict[k3], param_dict[k_3], f1, f2)
+                        )
+
+    ## Trajectories
+    plt.plot(solution_1[:, 0], solution_1[:, 1], '--', solution_2[:, 0], solution_2[:, 1], '--')
+
+    solution_c = odeint(
+                            derivate,
+                            solution_a[-1],
+                            t_grid,
+                            args=(auto_k1, auto_k_1, param_dict[k2], param_dict[k3], param_dict[k_3], f1, f2)
+                        )
+
+    ## Cycle
+    plt.quiver(
+                  solution_c[:-1, 0],
+                  solution_c[:-1, 1],
+                  solution_c[1:, 0] - solution_c[:-1, 0],
+                  solution_c[1:, 1] - solution_c[:-1, 1],
+                  scale=2
+              )
+
+    plt.xlim(0.0, 1.0)
+    plt.ylim(0.0, 1.0)
+    plt.show()
+
+
+def auto_oscillation(f1, f2, param_dict, auto_k1, auto_k_1, cond_mult, cond_y):
     t_grid = np.linspace(0, 10000, 1000)
     start = [0.2, 0.2]
 
-    solution = odeint(derivate, start, t_grid, args=(auto_k1, auto_k_1, param_dict[k2], param_dict[k3], param_dict[k_3]))
+    solution = odeint(derivate, start, t_grid, args=(auto_k1, auto_k_1, param_dict[k2], param_dict[k3], param_dict[k_3], f1, f2))
 
-    plt.plot(t_grid, solution[:, 0], 'b')
+    #plt.plot(t_grid, solution[:, 0], 'b')
 
-    plt.xlabel("t")
-    plt.ylabel("x")
-    plt.show()
+    #plt.xlabel("t")
+    #plt.ylabel("x")
+    #plt.show()
 
-    plt.plot(t_grid, solution[:, 1], 'r')
+    #plt.plot(t_grid, solution[:, 1], 'r')
 
-    plt.xlabel("t")
-    plt.ylabel("y")
-    plt.show()
+    #plt.xlabel("t")
+    #plt.ylabel("y")
+    #plt.show()
+
+    phase_portrait(f1, f2, param_dict, auto_k1, auto_k_1, cond_mult, cond_y, solution)
 
 
 if __name__ == "__main__":
@@ -294,6 +364,8 @@ if __name__ == "__main__":
     dydt = k3 * (1 - x - 2 * y) * x - k_3 * y
 
     #one_parameter_analysis(dxdt, dydt, param_values)
+
     #two_parameter_analysis(dxdt, dydt, param_values)
-    #auto_oscillation(dxdt, dydt, param_values, 0.30066, 0.024783) ## Variant #1
-    auto_oscillation(dxdt, dydt, param_values, 0.121589, 0.011091) ## Variant #5
+
+    #auto_oscillation(dxdt, dydt, param_values, 0.30066, 0.024783, 1, 1) ## Variant #1
+    auto_oscillation(dxdt, dydt, param_values, 0.121589, 0.011091, 2, 1) ## Variant #5
