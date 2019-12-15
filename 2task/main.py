@@ -11,7 +11,7 @@ from copy import deepcopy
 x, y, k1, k_1, k2, k3, k_3 = symbols("x y k1 k_1 k2 k3 k_3")
 
 
-def one_parameter_analysis(f1, f2, param_values):
+def one_parameter_analysis(f1, f2, param_values, k2_bot, k2_top, const1, const2):
     """
     One-parameter analysis
     The analysis is performed by parameter k2
@@ -34,8 +34,8 @@ def one_parameter_analysis(f1, f2, param_values):
     j = 0
 
     for i, val in enumerate(y_list):
-        curr_x = solution[x].subs({ y: val })
-        curr_k2 = solution[k2].subs({ y: val })
+        curr_x = re(solution[x].subs({ y: val }))
+        curr_k2 = re(solution[k2].subs({ y: val }))
 
         if not (0 <= curr_x <= 1) or not (0 <= val + curr_x <= 1):
             y_final = np.delete(y_final, i - j)
@@ -58,11 +58,11 @@ def one_parameter_analysis(f1, f2, param_values):
         trace_list.append(trace(jac))
 
     for i in range(2, len(det_list)):
-        if det_list[i] * det_list[i - 1] <= 0:
-            plt.plot(k2_list[i], x_list[i], 'r*', label='saddle-node')
-            plt.plot(k2_list[i], y_list[i], 'r*', label='saddle-node')
+        if det_list[i] * det_list[i - 1] <= const1:
+            plt.plot(k2_list[i], x_list[i], 'rx', label='saddle-node')
+            plt.plot(k2_list[i], y_list[i], 'rx', label='saddle-node')
 
-        if trace_list[i] * trace_list[i - 1] <= 0:
+        if trace_list[i] * trace_list[i - 1] <= const2:
             plt.plot(k2_list[i], x_list[i], 'go', label='hopf')
             plt.plot(k2_list[i], y_list[i], 'go', label='hopf')
 
@@ -72,7 +72,7 @@ def one_parameter_analysis(f1, f2, param_values):
     plt.xlabel('k2')
     plt.ylabel('x, y')
 
-    plt.xlim(-50, 50)
+    plt.xlim(k2_bot, k2_top)
     plt.ylim(0.0, 1.0)
 
     plt.show()
@@ -355,7 +355,8 @@ if __name__ == "__main__":
     #dxdt = k1 * (1 - x - 2 * y) - k_1 * x - k3 * x * (1 - x - 2 * y) + k_3 * y - k2 * ((1 - x - 2 * y) ** 2) * x
     #dydt = k3 * (1 - x - 2 * y) * x - k_3 * y
 
-    one_parameter_analysis(dxdt, dydt, param_values)
+    one_parameter_analysis(dxdt, dydt, param_values, -50, 50, 0, 0) ## Variant 1
+    #one_parameter_analysis(dxdt, dydt, param_values, 0, 20, 9e-9, 6.5e-4) ## Variant 5
 
     #two_parameter_analysis(dxdt, dydt, param_values, 1, 1, 10e-4, 10e-1) ## Variant 1
     #two_parameter_analysis(dxdt, dydt, param_values, 2, 1, 10e-4, 100e-1)
