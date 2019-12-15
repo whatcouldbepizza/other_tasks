@@ -37,7 +37,7 @@ def one_parameter_analysis(f1, f2, param_values):
         curr_x = solution[x].subs({ y: val })
         curr_k2 = solution[k2].subs({ y: val })
 
-        if not (0 <= curr_x <= 1) or not (0 <= val + curr_x <= 1) or fabs(curr_k2) > 2 * 50:
+        if not (0 <= curr_x <= 1) or not (0 <= val + curr_x <= 1):
             y_final = np.delete(y_final, i - j)
             j += 1
             continue
@@ -71,6 +71,9 @@ def one_parameter_analysis(f1, f2, param_values):
 
     plt.xlabel('k2')
     plt.ylabel('x, y')
+
+    plt.xlim(-50, 50)
+    plt.ylim(0.0, 1.0)
 
     plt.show()
 
