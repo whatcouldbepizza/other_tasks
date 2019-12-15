@@ -118,7 +118,6 @@ def two_parameter_analysis(f1, f2, param_dict, cond_mult, cond_y, const1, const2
                                                      x: x_grid[i],
                                                      y: y_grid[i],
                                                      k2: param_dict[k2],
-                                                     #k1: param_dict[k1],
                                                      k3: param_dict[k3],
                                                      k_3: param_dict[k_3]
                                                  })
@@ -128,7 +127,6 @@ def two_parameter_analysis(f1, f2, param_dict, cond_mult, cond_y, const1, const2
                                                     y: y_grid[i],
                                                     k_1: param1_trace_subs[i],
                                                     k2: param_dict[k2],
-                                                    #k1: param_dict[k1],
                                                     k3: param_dict[k3],
                                                     k_3: param_dict[k_3]
                                                 })
@@ -137,7 +135,6 @@ def two_parameter_analysis(f1, f2, param_dict, cond_mult, cond_y, const1, const2
                                                  x: x_grid[i],
                                                  y: y_grid[i],
                                                  k2: param_dict[k2],
-                                                 #k1: param_dict[k1],
                                                  k3: param_dict[k3],
                                                  k_3: param_dict[k_3]
                                              })
@@ -147,51 +144,43 @@ def two_parameter_analysis(f1, f2, param_dict, cond_mult, cond_y, const1, const2
                                                   y: y_grid[i],
                                                   k_1: param1_det_subs[i],
                                                   k2: param_dict[k2],
-                                                  #k1: param_dict[k1],
                                                   k3: param_dict[k3],
                                                   k_3: param_dict[k_3]
                                               })
 
     e1, e2 = jac_A.eigenvals()
 
-    #for curr_x, curr_y, curr_param2, curr_param1 in zip(x_grid, y_grid, param2_trace_subs, param1_trace_subs):
-    #    curr_e1 = e1.subs({
-    #                          x: curr_x,
-    #                          y: curr_y,
-    #                          k1: curr_param2,
-    #                          #k2: curr_param2,
-    #                          k_1: curr_param1,
-    #                          k2: param_dict[k2],
-    #                          #k1: param_dict[k1],
-    #                          k3: param_dict[k3],
-    #                          k_3: param_dict[k_3]
-    #                      })
+    for curr_x, curr_y, curr_param2, curr_param1 in zip(x_grid, y_grid, param2_trace_subs, param1_trace_subs):
+        curr_e1 = e1.subs({
+                              x: curr_x,
+                              y: curr_y,
+                              k1: curr_param2,
+                              k_1: curr_param1,
+                              k2: param_dict[k2],
+                              k3: param_dict[k3],
+                              k_3: param_dict[k_3]
+                          })
 
-    #    curr_e2 = e2.subs({
-    #                          x: curr_x,
-    #                          y: curr_y,
-    #                          k1: curr_param2,
-    #                          #k2: curr_param2,
-    #                          k_1: curr_param1,
-    #                          k2: param_dict[k2],
-    #                          #k1: param_dict[k1],
-    #                          k3: param_dict[k3],
-    #                          k_3: param_dict[k_3]
-    #                      })
+        curr_e2 = e2.subs({
+                              x: curr_x,
+                              y: curr_y,
+                              k1: curr_param2,
+                              k_1: curr_param1,
+                              k2: param_dict[k2],
+                              k3: param_dict[k3],
+                              k_3: param_dict[k_3]
+                          })
 
-    #    if re(curr_e1) < const2 and re(curr_e2) < const2:
-    #        pass
-    #        #plt.plot(curr_param2, curr_param1, 'X', color='g')
+        if curr_e1.is_real and curr_e2.is_real and curr_e1 < const1 and curr_e2 < const1:
+            plt.plot(curr_param2, curr_param1, 'X', color='g')
 
     param1_det_diff = param1_det.diff(x)
     param1_det_diff_func = lambdify([x, y, k2, k3, k_3], param1_det_diff, 'numpy')
-    #param1_det_diff_func = lambdify([x, y, k1, k3, k_3], param1_det_diff, 'numpy')
 
     diff_arr = []
 
     for i in range(x_grid.shape[0]):
-        if fabs(param1_det_diff_func(x_grid[i], y_grid[i], param_dict[k2], param_dict[k3], param_dict[k_3])) < const1:
-        #if fabs(param1_det_diff_func(x_grid[i], y_grid[i], param_dict[k1], param_dict[k3], param_dict[k_3])) < 10e-3:
+        if fabs(param1_det_diff_func(x_grid[i], y_grid[i], param_dict[k2], param_dict[k3], param_dict[k_3])) < const2:
             diff_arr.append(x_grid[i])
 
     c_x = sum(diff_arr) / len(diff_arr)
@@ -219,7 +208,7 @@ def two_parameter_analysis(f1, f2, param_dict, cond_mult, cond_y, const1, const2
     plt.plot(param2_trace_subs, param1_trace_subs, '--', label='neutrality')
     plt.plot(param2_det_subs, param1_det_subs, label='multiplicity')
 
-    #plt.plot(c_param2, c_param1, 'ro', color='r')
+    plt.plot(c_param2, c_param1, 'ro', color='r')
 
     plt.xlabel('k1')
     plt.ylabel('k_1')
@@ -346,10 +335,10 @@ def auto_oscillation(f1, f2, param_dict, auto_k1, auto_k_1, cond_mult, cond_y):
 
 if __name__ == "__main__":
     ## Variant # 1
-    #param_values = { k1: 0.3, k_1: 0.03, k2: 2.0, k3: 0.0032, k_3: 0.003 }
+    param_values = { k1: 0.3, k_1: 0.03, k2: 2.0, k3: 0.0032, k_3: 0.003 }
 
-    #dxdt = k1 * (1 - x - y) - k_1 * x - k2 * ((1 - x - y) ** 2) * x
-    #dydt = k3 * (1 - x - y) - k_3 * y
+    dxdt = k1 * (1 - x - y) - k_1 * x - k2 * ((1 - x - y) ** 2) * x
+    dydt = k3 * (1 - x - y) - k_3 * y
 
     ## Variant #4
     #param_values = { k1: 1, k_1: 0.01, k2: 2, k3: 0.0032, k_3: 0.002 }
@@ -358,14 +347,15 @@ if __name__ == "__main__":
     #dydt = k3 * x - k_3 * y
 
     ## Variant # 5
-    param_values = { k1: 0.12, k_1: 0.01, k2: 0.95, k3: 0.0032, k_3: 0.002 }
+    #param_values = { k1: 0.12, k_1: 0.01, k2: 0.95, k3: 0.0032, k_3: 0.002 }
 
-    dxdt = k1 * (1 - x - 2 * y) - k_1 * x - k3 * x * (1 - x - 2 * y) + k_3 * y - k2 * ((1 - x - 2 * y) ** 2) * x
-    dydt = k3 * (1 - x - 2 * y) * x - k_3 * y
+    #dxdt = k1 * (1 - x - 2 * y) - k_1 * x - k3 * x * (1 - x - 2 * y) + k_3 * y - k2 * ((1 - x - 2 * y) ** 2) * x
+    #dydt = k3 * (1 - x - 2 * y) * x - k_3 * y
 
-    #one_parameter_analysis(dxdt, dydt, param_values)
+    one_parameter_analysis(dxdt, dydt, param_values)
 
-    #two_parameter_analysis(dxdt, dydt, param_values)
+    #two_parameter_analysis(dxdt, dydt, param_values, 1, 1, 10e-4, 10e-1) ## Variant 1
+    #two_parameter_analysis(dxdt, dydt, param_values, 2, 1, 10e-4, 100e-1)
 
     #auto_oscillation(dxdt, dydt, param_values, 0.30066, 0.024783, 1, 1) ## Variant #1
-    auto_oscillation(dxdt, dydt, param_values, 0.121589, 0.011091, 2, 1) ## Variant #5
+    #auto_oscillation(dxdt, dydt, param_values, 0.121589, 0.011091, 2, 1) ## Variant #5
