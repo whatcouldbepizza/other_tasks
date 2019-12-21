@@ -321,17 +321,17 @@ def auto_oscillation(f1, f2, param_dict, auto_k1, auto_k_1, cond_mult, cond_y):
 
     solution = odeint(derivate, start, t_grid, args=(auto_k1, auto_k_1, param_dict[k2], param_dict[k3], param_dict[k_3], f1, f2))
 
-    #plt.plot(t_grid, solution[:, 0], 'b')
+    plt.plot(t_grid, solution[:, 0], 'b')
 
-    #plt.xlabel("t")
-    #plt.ylabel("x")
-    #plt.show()
+    plt.xlabel("t")
+    plt.ylabel("x")
+    plt.show()
 
-    #plt.plot(t_grid, solution[:, 1], 'r')
+    plt.plot(t_grid, solution[:, 1], 'r')
 
-    #plt.xlabel("t")
-    #plt.ylabel("y")
-    #plt.show()
+    plt.xlabel("t")
+    plt.ylabel("y")
+    plt.show()
 
     phase_portrait(f1, f2, param_dict, auto_k1, auto_k_1, cond_mult, cond_y, solution)
 
