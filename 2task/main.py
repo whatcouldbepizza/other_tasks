@@ -338,7 +338,7 @@ def auto_oscillation(f1, f2, param_dict, auto_k1, auto_k_1, cond_mult, cond_y):
 
 if __name__ == "__main__":
     ## Variant # 1
-    param_values = { k1: 0.3, k_1: 0.03, k2: 2.0, k3: 0.0032, k_3: 0.003 }
+    param_values = { k1: 0.3, k_1: 0.003, k2: 2.0, k3: 0.0032, k_3: 0.003 }
 
     dxdt = k1 * (1 - x - y) - k_1 * x - k2 * ((1 - x - y) ** 2) * x
     dydt = k3 * (1 - x - y) - k_3 * y
@@ -355,11 +355,11 @@ if __name__ == "__main__":
     #dxdt = k1 * (1 - x - 2 * y) - k_1 * x - k3 * x * (1 - x - 2 * y) + k_3 * y - k2 * ((1 - x - 2 * y) ** 2) * x
     #dydt = k3 * (1 - x - 2 * y) * x - k_3 * y
 
-    one_parameter_analysis(dxdt, dydt, param_values, -50, 50, 0, 0) ## Variant 1
+    #one_parameter_analysis(dxdt, dydt, param_values, -50, 50, 0, 0) ## Variant 1
     #one_parameter_analysis(dxdt, dydt, param_values, 0, 20, 9e-9, 6.5e-4) ## Variant 5
 
     #two_parameter_analysis(dxdt, dydt, param_values, 1, 1, 10e-4, 10e-1) ## Variant 1
     #two_parameter_analysis(dxdt, dydt, param_values, 2, 1, 10e-4, 100e-1)
 
-    #auto_oscillation(dxdt, dydt, param_values, 0.30066, 0.024783, 1, 1) ## Variant #1
+    auto_oscillation(dxdt, dydt, param_values, 0.30066, 0.024783, 1, 1) ## Variant #1
     #auto_oscillation(dxdt, dydt, param_values, 0.121589, 0.011091, 2, 1) ## Variant #5
