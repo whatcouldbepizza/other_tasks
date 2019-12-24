@@ -6,7 +6,7 @@ from mshr import *
 from matplotlib import tri
 from matplotlib import pyplot as plt
 
-from sympy import symbols, diff, ccode, sqrt
+from sympy import symbols, diff, ccode, sqrt, sin, cos
 
 import imageio
 
@@ -225,8 +225,10 @@ def heat_equation(u_e, alpha, step_count, T, name):
 
 
 if __name__ == "__main__":
-    #poisson_equation(1 - x ** 2 + y, 1, 'test1')
+    poisson_equation(-2 * x ** 2 + 4 * y + 1, 1, 'test1')
+    poisson_equation(x ** 2 + y ** 2 + 1, 1, 'test2')
+    poisson_equation(sin(x) + sin(y), 1, 'test3')
 
-    # TODO: Need more examples
-
-    heat_equation(t * (y - x * t), 1, 50, 5.0, 'test_h_1')
+    heat_equation((x + y * t) * t, 1, 50, 5.0, 'test_h_1')
+    heat_equation((x ** 2 * t + y ** 2) * t, 1, 50, 5.0, 'test_h_2')
+    heat_equation(x * sin(3 * y * t) - 4 * cos(5 * x), 1, 50, 5.0, 'test_h_3')
