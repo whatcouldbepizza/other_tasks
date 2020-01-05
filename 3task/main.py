@@ -90,7 +90,7 @@ def poisson_equation(u_e, alpha, name):
     triangs = np.asarray([ cell.entities(0) for cell in cells(mesh) ])
     triangulation = tri.Triangulation(mesh_coords[:, 0], mesh_coords[:, 1], triangs)
 
-    fig, (ax1, ax2) = plt.subplots(1, 2)
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9, 4))
 
     zfaces1 = []
     zfaces2 = []
@@ -107,6 +107,9 @@ def poisson_equation(u_e, alpha, name):
 
     ax1.set_title('Approximate')
     ax2.set_title('Exact')
+
+    fig.colorbar(ax1_plot, ax=ax1)
+    fig.colorbar(ax2_plot, ax=ax2)
 
     fig.canvas.draw()
 
@@ -181,7 +184,7 @@ def heat_equation(u_e, alpha, step_count, T, name):
         triangs = np.asarray([ cell.entities(0) for cell in cells(mesh) ])
         triangulation = tri.Triangulation(mesh_coords[:, 0], mesh_coords[:, 1], triangs)
 
-        fig, (ax1, ax2) = plt.subplots(1, 2)
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4))
 
         zfaces1 = []
         zfaces2 = []
@@ -198,6 +201,9 @@ def heat_equation(u_e, alpha, step_count, T, name):
 
         ax1.set_title('Approximate')
         ax2.set_title('Exact')
+
+        fig.colorbar(ax1_plot, ax=ax1)
+        fig.colorbar(ax2_plot, ax=ax2)
 
         fig.canvas.draw()
 
@@ -217,8 +223,10 @@ def heat_equation(u_e, alpha, step_count, T, name):
 
     t_grid = np.linspace(t_step, T, step_count)
 
-    plt.plot(t_grid, l2_errs)
-    plt.plot(t_grid, max_errs, '--')
+    plt.plot(t_grid, l2_errs, label='l2 errors')
+    plt.plot(t_grid, max_errs, '--', label='max errors')
+
+    plt.legend()
 
     plt.savefig(f'error_{name}.png')
     plt.close()
@@ -229,6 +237,6 @@ if __name__ == "__main__":
     poisson_equation(x ** 2 + y ** 2 + 1, 1, 'test2')
     poisson_equation(sin(x) + sin(y), 1, 'test3')
 
-    heat_equation((x + y * t) * t, 1, 50, 5.0, 'test_h_1')
-    heat_equation((x ** 2 * t + y ** 2) * t, 1, 50, 5.0, 'test_h_2')
-    heat_equation(x * sin(3 * y * t) - 4 * cos(5 * x), 1, 50, 5.0, 'test_h_3')
+    #heat_equation((x + y * t) * t, 1, 50, 5.0, 'test_h_1')
+    #heat_equation((x ** 2 * t + y ** 2) * t, 1, 50, 5.0, 'test_h_2')
+    #heat_equation(x * sin(3 * y * t) - 4 * cos(5 * x), 1, 50, 5.0, 'test_h_3')
