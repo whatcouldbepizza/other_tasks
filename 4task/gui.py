@@ -11,6 +11,7 @@ from math import pow
 
 from classes import Particle, Emitter
 from calculations import supercopy, overall_odeint, overall_verle, to_particle_list
+from calculations_threading import overall_verle_threading
 
 import json
 import datetime
@@ -53,6 +54,8 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.particleList = self.initialize_solar_system()
         self.particleListV = supercopy(self.particleList)
 
+        self.toDraw = supercopy(self.particleList)
+
         self.animation = FuncAnimation(self.figure, self.draw_particles, interval=10)
 
         self.x_scale = None
@@ -70,13 +73,13 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
         self.i += 1
 
-        for i in range(len(self.particleList)):
+        for i in range(len(self.toDraw)):
             try:
-                self.particleList[i].circle.remove()
+                self.toDraw[i].circle.remove()
             except Exception:
                 pass
 
-        delta_t = 1000000 if self.solar_mode else 1
+        delta_t = 100000 if self.solar_mode else 1
 
         #odeint_list = from_particle_list(self.particleList)
         #verle_list = from_particle_list(self.particleListV)
@@ -95,7 +98,8 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
         #start_time = datetime.datetime.now()
         #verle_list = calculate_verle(verle_list, delta_t)
-        verle_list = overall_verle(verle_list, [0, delta_t / 2, delta_t])[0]
+        #verle_list = overall_verle(verle_list, [0, delta_t / 2, delta_t])[0]
+        verle_list = overall_verle_threading(verle_list, [0, delta_t / 2, delta_t])[0]
         #print("Verle iteration: {}".format(datetime.datetime.now() - start_time))
 
         #start_time = datetime.datetime.now()
@@ -118,32 +122,32 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.inaccuracy_iter[0].append(self.i)
         self.inaccuracy_iter[1].append(metric)
 
-        toDraw = supercopy(self.particleListV) if self.methodCheckBox.isChecked() else supercopy(self.particleList)
+        self.toDraw = supercopy(self.particleListV) if self.methodCheckBox.isChecked() else supercopy(self.particleList)
 
-        if len(self.particleList) != 0:
+        if len(self.toDraw) != 0:
 
             if self.x_scale is None:
-                self.x_scale = max([ elem.coordinates[0] for elem in self.particleList ] + [100])
-            max_m = max([ elem.mass for elem in self.particleList ])
+                self.x_scale = max([ elem.coordinates[0] for elem in self.toDraw ] + [100])
+            max_m = max([ elem.mass for elem in self.toDraw ])
 
-            sorted_masses = sorted([ elem.mass for elem in self.particleList ])
+            sorted_masses = sorted([ elem.mass for elem in self.toDraw ])
             masses_map = dict()
             sizes = np.linspace(0.01, 0.03, len(sorted_masses))
 
             for i, elem in enumerate(sorted_masses):
                 masses_map[elem] = sizes[i]
 
-            for i in range(len(self.particleList)):
+            for i in range(len(self.toDraw)):
 
-                self.particleList[i].create_circle(coordinates=
+                self.toDraw[i].create_circle(coordinates=
                                                    [
-                                                       self.particleList[i].coordinates[0] / (self.x_scale * 2.1) + 0.5,
-                                                       self.particleList[i].coordinates[1] / (self.x_scale * 2.1) + 0.5
+                                                       self.toDraw[i].coordinates[0] / (self.x_scale * 2.1) + 0.5,
+                                                       self.toDraw[i].coordinates[1] / (self.x_scale * 2.1) + 0.5
                                                    ],
-                                                   size=masses_map[self.particleList[i].mass],
-                                                   color=self.particleList[i].color)
+                                                   size=masses_map[self.toDraw[i].mass],
+                                                   color=self.toDraw[i].color)
 
-                self.ax.add_artist(self.particleList[i].circle)
+                self.ax.add_artist(self.toDraw[i].circle)
 
         self.figure.canvas.draw_idle()
 

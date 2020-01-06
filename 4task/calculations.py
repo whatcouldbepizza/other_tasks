@@ -148,11 +148,9 @@ def get_acceleration_verle(particleList, p_masses, index):
     return res
 
 
-def overall_verle(particleList, tGrid):
+def particles_to_arrays(particleList, tGrid):
     particles = [[[0, 0, 0, 0] for _ in particleList] for _ in tGrid]
     p_masses = [p.mass for p in particleList]
-
-    delta_t = tGrid[1] - tGrid[0]
 
     for p_i, p in enumerate(particleList):
         particles[0][p_i][0] = p.coordinates[0]
@@ -165,14 +163,16 @@ def overall_verle(particleList, tGrid):
         particles[1][p_i][2] = p.speed[0]
         particles[1][p_i][3] = p.speed[1]
 
-    #print(str(particles) + "\n\n\n")
+    return particles, p_masses
 
-    acceleration_list = []
 
-    for p_i in range(len(particles[0])):
-        #acceleration_list.append(get_acceleration_verle(particles[0], p_masses, p_i))
-        acceleration_list.append([0, 0])
-        #print("A: " + str(acceleration_list[p_i][0]) + " " + str(acceleration_list[p_i][1]) + "\n\n")
+def overall_verle(particleList, tGrid):
+    """
+    Consequent Verlet method
+    """
+    particles, p_masses = particles_to_arrays(particleList, tGrid)
+    acceleration_list = [[0, 0] for _ in range(len(particles[0]))]
+    delta_t = tGrid[1] - tGrid[0]
 
     for t_i, _ in enumerate(tGrid):
         if t_i == 0:
