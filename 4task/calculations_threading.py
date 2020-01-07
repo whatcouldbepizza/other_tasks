@@ -42,17 +42,18 @@ def update_speed(
         particles[t_i][p_i][3] += (acceleration_list[p_i][1] + new_acceleration_list[p_i][1]) / 2 * delta_t
 
 
-def copy_to_next_layer(particles, t_i, p_i):
+def copy_to_next_layer(particles, t_i, p_i_start, p_i_end):
     """
     Copying coordinates and speed values to next layer
     """
-    particles[t_i + 1][p_i][0] = particles[t_i][p_i][0]
-    particles[t_i + 1][p_i][1] = particles[t_i][p_i][1]
-    particles[t_i + 1][p_i][2] = particles[t_i][p_i][2]
-    particles[t_i + 1][p_i][3] = particles[t_i][p_i][3]
+    for p_i in range(p_i_start, p_i_end):
+        particles[t_i + 1][p_i][0] = particles[t_i][p_i][0]
+        particles[t_i + 1][p_i][1] = particles[t_i][p_i][1]
+        particles[t_i + 1][p_i][2] = particles[t_i][p_i][2]
+        particles[t_i + 1][p_i][3] = particles[t_i][p_i][3]
 
 
-def one_time_layer(
+def one_time_layer_threading(
     particles,
     p_masses,
     acceleration_list,
@@ -103,8 +104,20 @@ def one_time_layer(
         acceleration_list[i] = new_acceleration_list[i]
 
     if t_i < max_len:
-        for p_i in range(len(particles[t_i])):
-            copy_to_next_layer(particles, t_i, p_i)
+        threads = []
+
+        for i in range(THREAD_COUNT):
+            p_i_start = i * block
+            p_i_end = (i + 1) * block if i < THREAD_COUNT - 1 else len(particles[t_i])
+
+            args = (particles, t_i, p_i_start, p_i_end)
+            curr_thread = threading.Thread(target=copy_to_next_layer, args=args)
+
+            threads.append(curr_thread)
+            curr_thread.start()
+
+        for thread in threads:
+            thread.join()
 
 
 def overall_verle_threading(particleList, tGrid):
@@ -120,8 +133,6 @@ def overall_verle_threading(particleList, tGrid):
         if t_i == 0:
             continue
 
-        one_time_layer(particles, p_masses, acceleration_list, t_i, delta_t, max_len)
-
-    #print(particles)
+        one_time_layer_threading(particles, p_masses, acceleration_list, t_i, delta_t, max_len)
 
     return particles[-1], particles

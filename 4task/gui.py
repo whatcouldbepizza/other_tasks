@@ -10,8 +10,10 @@ import numpy as np
 from math import pow
 
 from classes import Particle, Emitter
+
 from calculations import supercopy, overall_odeint, overall_verle, to_particle_list
 from calculations_threading import overall_verle_threading
+from calculations_multiprocessing import overall_verle_multiprocessing
 
 import json
 import datetime
@@ -81,34 +83,19 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
         delta_t = 100000 if self.solar_mode else 1
 
-        #odeint_list = from_particle_list(self.particleList)
-        #verle_list = from_particle_list(self.particleListV)
-
         odeint_list = supercopy(self.particleList)
         verle_list = supercopy(self.particleListV)
 
-        #if self.methodCheckBox.isChecked():
-            #self.particleList = calculate_verle(self.particleList, delta_t)
-        #    verle_list = calculate_verle(verle_list, delta_t)
-            #print("Verle iteration time: {}".format(datetime.datetime.now() - start_time))
-        #else:
-            #self.particleList = calculate_odeint(self.particleList, delta_t)
-        #    odeint_list = calculate_odeint(odeint_list, delta_t)
-            #print("Odeint iteration time: {}".format(datetime.datetime.now() - start_time))
-
-        #start_time = datetime.datetime.now()
-        #verle_list = calculate_verle(verle_list, delta_t)
+        start_time = datetime.datetime.now()
         #verle_list = overall_verle(verle_list, [0, delta_t / 2, delta_t])[0]
         verle_list = overall_verle_threading(verle_list, [0, delta_t / 2, delta_t])[0]
-        #print("Verle iteration: {}".format(datetime.datetime.now() - start_time))
+        #verle_list = overall_verle_multiprocessing(verle_list, [0, delta_t / 2, delta_t])[0]
+        #1/0
+        print("Verle iteration: {}".format(datetime.datetime.now() - start_time))
 
         #start_time = datetime.datetime.now()
-        #odeint_list = calculate_odeint(odeint_list, delta_t)
         odeint_list = overall_odeint(odeint_list, [0, delta_t / 2, delta_t])[0]
         #print("Odeint iteration: {}".format(datetime.datetime.now() - start_time))
-
-        #self.particleList = supercopy(odeint_list)
-        #self.particleListV = supercopy(verle_list)
 
         self.particleList = to_particle_list(odeint_list, self.particleList)
         self.particleListV = to_particle_list(verle_list, self.particleListV)
