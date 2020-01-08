@@ -94,6 +94,10 @@ def one_time_layer_multiprocessing(
         p_i_end = (i + 1) * block if i < PROCESS_COUNT - 1 else len(particles[t_i])
 
         args = (t_i, delta_t, p_i_start, p_i_end)
+
+        #processes[i].target = update_speed
+        #processes[i].args = args
+        #processes[i].start()
         curr_process = Process(target=update_speed, args=args)
 
         processes.append(curr_process)

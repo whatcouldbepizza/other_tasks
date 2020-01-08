@@ -2,3 +2,6 @@
 *.avi
 3task/jitfailure-dolfin_expression_0a65bf5e5acdd0238c3c6c7b386ddcd9/
 4task/__pycache__/*
+4task/build/*
+4task/*.c
+4task/*.so

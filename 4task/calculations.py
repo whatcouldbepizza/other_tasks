@@ -143,6 +143,9 @@ def get_acceleration_verle(particleList, p_masses, index):
 
         norm = math.pow(math.pow(distance[0], 2) + math.pow(distance[1], 2), 3/2)
 
+        print(math.pow(distance[0], 2) + math.pow(distance[1], 2))
+
+
         res += G * p_masses[i] * distance / norm
 
     return res
@@ -188,13 +191,9 @@ def overall_verle(particleList, tGrid):
 
         for p_i in range(len(particles[t_i])):
             new_acceleration_list.append(get_acceleration_verle(particles[t_i], p_masses, p_i))
-            #print("A: " + str(new_acceleration_list[p_i][0]) + " " + str(new_acceleration_list[p_i][1]) + "\n\n")
 
             particles[t_i][p_i][2] += (acceleration_list[p_i][0] + new_acceleration_list[p_i][0]) / 2 * delta_t
             particles[t_i][p_i][3] += (acceleration_list[p_i][1] + new_acceleration_list[p_i][1]) / 2 * delta_t
-
-        #print(acceleration_list)
-        #print(new_acceleration_list)
 
         acceleration_list = copy.deepcopy(new_acceleration_list)
 
@@ -205,7 +204,4 @@ def overall_verle(particleList, tGrid):
                 particles[t_i + 1][p_i][2] = particles[t_i][p_i][2]
                 particles[t_i + 1][p_i][3] = particles[t_i][p_i][3]
 
-        #print(particles[t_i])
-
-    #print(particles)
     return particles[-1], particles
