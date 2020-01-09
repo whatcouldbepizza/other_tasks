@@ -15,6 +15,7 @@ from calculations import supercopy, overall_odeint, overall_verle, to_particle_l
 from calculations_threading import overall_verle_threading
 from calculations_multiprocessing import overall_verle_multiprocessing
 from calculations_cython import overall_verle_cython
+from calculations_opencl import overall_verle_opencl
 
 import json
 import datetime
@@ -82,7 +83,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
             except Exception:
                 pass
 
-        delta_t = 100000 if self.solar_mode else 1
+        delta_t = 100000.0 if self.solar_mode else 1
 
         odeint_list = supercopy(self.particleList)
         verle_list = supercopy(self.particleListV)
@@ -91,7 +92,8 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         #verle_list = overall_verle(verle_list, [0, delta_t / 2, delta_t])[0]
         #verle_list = overall_verle_threading(verle_list, [0, delta_t / 2, delta_t])[0]
         #verle_list = overall_verle_multiprocessing(verle_list, [0, delta_t / 2, delta_t])[0]
-        verle_list = overall_verle_cython(verle_list, [0, delta_t / 2, delta_t])[0]
+        #verle_list = overall_verle_cython(verle_list, [0, delta_t / 2, delta_t])[0]
+        verle_list = overall_verle_opencl(verle_list, [0, delta_t / 2, delta_t])[0]
         #1/0
         print("Verle iteration: {}".format(datetime.datetime.now() - start_time))
 

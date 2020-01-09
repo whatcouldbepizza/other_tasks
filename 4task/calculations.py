@@ -143,9 +143,6 @@ def get_acceleration_verle(particleList, p_masses, index):
 
         norm = math.pow(math.pow(distance[0], 2) + math.pow(distance[1], 2), 3/2)
 
-        print(math.pow(distance[0], 2) + math.pow(distance[1], 2))
-
-
         res += G * p_masses[i] * distance / norm
 
     return res
