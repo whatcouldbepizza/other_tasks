@@ -6,14 +6,18 @@ import numpy as np
 from pyopencl import cltypes
 
 
-ctx = cl.create_some_context()
-queue = cl.CommandQueue(ctx)
 
-mf = cl.mem_flags
 
-prg = cl.Program(
-    ctx,
-    """
+
+def overall_verle_opencl(particleList, tGrid):
+    ctx = cl.create_some_context()
+    queue = cl.CommandQueue(ctx)
+
+    mf = cl.mem_flags
+
+    prg = cl.Program(
+        ctx,
+        r"""
     #ifdef cl_khr_fp64
         #pragma OPENCL EXTENSION cl_khr_fp64 : enable
     #elif defined(cl_amd_fp64)
@@ -31,7 +35,7 @@ prg = cl.Program(
         __global double *acc_tmp
     )
     {
-        double G = 6.6743015 * 0.0000000001;
+        double G = 6.6743015 * pow(10.0, -11);
         double norm;
         double distance[2];
 
@@ -47,8 +51,8 @@ prg = cl.Program(
 
                 norm = sqrt(distance[0] * distance[0] + distance[1] * distance[1]);
 
-                acc_tmp[0] += G * p_masses[p_i] * distance[0] / norm;
-                acc_tmp[1] += G * p_masses[p_i] * distance[1] / norm;
+                acc_tmp[0] += G * p_masses[p_i] * distance[0] / pow(norm, 3);
+                acc_tmp[1] += G * p_masses[p_i] * distance[1] / pow(norm, 3);
             }
         }
     }
@@ -76,7 +80,7 @@ prg = cl.Program(
                                                        + accelerations[p_i * 2 + 0] / 2 * dt * dt;
 
                 particles[(Pi * t_i + p_i) * 4 + 1] += particles[(Pi * t_i + p_i) * 4 + 3] * dt
-                                                       + accelerations[p_i * 2 + 2] / 2 * dt * dt;
+                                                       + accelerations[p_i * 2 + 1] / 2 * dt * dt;
             }
 
             for (int p_i = 0; p_i < Pi; ++p_i)
@@ -111,11 +115,9 @@ prg = cl.Program(
                 result[(Pi * t_i + p_i) * 4 + 3] = particles[(Pi * t_i + p_i) * 4 + 3];
             }
     }
-    """
-)
+        """
+    )
 
-
-def overall_verle_opencl(particleList, tGrid):
     particles, p_masses = particles_to_arrays(particleList, tGrid)
 
     Ti = np.array(len(tGrid))

@@ -125,7 +125,22 @@ def overall_odeint(particleList, tGrid):
                              result[-1][i * 4 + 3],
                          ])
 
-    return particles, result
+    res = []
+
+    for i in range(len(result)):
+        tmp = []
+
+        for j in range(len(result[i]) // 4):
+            tmp2 = []
+            tmp2.append(result[i][4 * j])
+            tmp2.append(result[i][4 * j + 1])
+            tmp2.append(result[i][4 * j + 2])
+            tmp2.append(result[i][4 * j + 3])
+            tmp.append(tmp2)
+
+        res.append(tmp)
+
+    return particles, res
 
 
 def get_acceleration_verle(particleList, p_masses, index):
@@ -177,6 +192,8 @@ def overall_verle(particleList, tGrid):
     for t_i, _ in enumerate(tGrid):
         if t_i == 0:
             continue
+
+        #print(particles)
 
         for p_i in range(len(particleList)):
             old_acceleration = acceleration_list[p_i]

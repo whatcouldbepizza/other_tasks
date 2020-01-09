@@ -1,8 +1,17 @@
+import sys
+import json
+
 import numpy as np
 import datetime
 import matplotlib.pyplot as plt
 
-from calculations import supercopy, overall_odeint, overall_verle
+from calculations import supercopy, to_particle_list, overall_odeint, overall_verle
+from calculations_threading import overall_verle_threading
+from calculations_multiprocessing import overall_verle_multiprocessing
+from calculations_cython import overall_verle_cython
+from calculations_opencl import overall_verle_opencl
+
+from classes import Particle
 
 
 def print_particle_list(lst=None):
@@ -56,3 +65,96 @@ def compare(particleList):
 
     #print("odeint: " + str(odeint_result))
     #print("\n\n\nverle: " + str(verle_result))
+
+
+def initialize_solar_system(data_file="solar_system.json"):
+    """
+    Function that prepares solar system example
+    """
+    particleList = []
+
+    with open(data_file, "r") as descr:
+        text_content = descr.read()
+
+    json_content = json.loads(text_content)
+
+    for val in json_content["particles"].values():
+
+        particle = Particle(coordinates=[val["x"], val["y"]],
+                            speed=[val["u"], val["v"]],
+                            mass=val["m"],
+                            color=val["color"],
+                            living_time=val["lifetime"])
+
+        particleList.append(particle)
+
+    solar_mode = True
+
+    return particleList
+
+
+def compare_accuracy():
+    solar_system = initialize_solar_system()
+
+    odeint_list_0 = supercopy(solar_system)
+    verle_list_0 = supercopy(solar_system)
+    verle_list_t_0 = supercopy(solar_system)
+    verle_list_m_0 = supercopy(solar_system)
+    verle_list_c_0 = supercopy(solar_system)
+    verle_list_o_0 = supercopy(solar_system)
+
+    tGrid = np.linspace(0, 5, 500)
+
+    odeint_list = overall_odeint(odeint_list_0, tGrid)[1]
+    verle_list = overall_verle(verle_list_0, tGrid)[1]
+    verle_list_t = overall_verle_threading(verle_list_t_0, tGrid)[1]
+    verle_list_m = overall_verle_multiprocessing(verle_list_m_0, tGrid)[1]
+    verle_list_c = overall_verle_cython(verle_list_c_0, tGrid)[1]
+    verle_list_o = overall_verle_opencl(verle_list_o_0, tGrid)[1]
+
+    inacc_v = []
+    inacc_vt = []
+    inacc_vm = []
+    inacc_vc = []
+    inacc_vo = []
+
+    for t in range(len(tGrid)):
+        metric_v = .0
+        metric_vt = .0
+        metric_vm = .0
+        metric_vc = .0
+        metric_vo = .0
+
+        for p_o, p_v, p_vt, p_vm, p_vc, p_vo in zip(odeint_list[t], verle_list[t], verle_list_t[t],
+                                        verle_list_m[t], verle_list_c[t], verle_list_o[t]):
+            dist_v = (np.array(p_o[:2]) - np.array(p_v[:2]))
+            dist_vt = (np.array(p_o[:2]) - np.array(p_vt[:2]))
+            dist_vm = (np.array(p_o[:2]) - np.array(p_vm[:2]))
+            dist_vc = (np.array(p_o[:2]) - np.array(p_vc[:2]))
+            dist_vo = (np.array(p_o[:2]) - np.array(p_vo[:2]))
+
+            metric_v += np.linalg.norm(dist_v)
+            metric_vt += np.linalg.norm(dist_vt)
+            metric_vm += np.linalg.norm(dist_vm)
+            metric_vc += np.linalg.norm(dist_vc)
+            metric_vo += np.linalg.norm(dist_vo)
+
+        inacc_v.append(metric_v)
+        inacc_vt.append(metric_vt)
+        inacc_vm.append(metric_vm)
+        inacc_vc.append(metric_vc)
+        inacc_vo.append(metric_vo)
+
+    plt.plot(tGrid, inacc_v, label='Verle')
+    plt.plot(tGrid, inacc_vt, label='Threading')
+    plt.plot(tGrid, inacc_vm, label='Multiprocessing')
+    plt.plot(tGrid, inacc_vc, label='Cython')
+    plt.plot(tGrid, inacc_vo, label='OpenCL')
+
+    plt.legend()
+    plt.show()
+
+
+if __name__ == "__main__":
+    if sys.argv[1] == "acc":
+        compare_accuracy()

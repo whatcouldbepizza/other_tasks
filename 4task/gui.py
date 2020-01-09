@@ -83,18 +83,17 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
             except Exception:
                 pass
 
-        delta_t = 100000.0 if self.solar_mode else 1
+        delta_t = 0.01 if self.solar_mode else 1
 
         odeint_list = supercopy(self.particleList)
         verle_list = supercopy(self.particleListV)
 
         start_time = datetime.datetime.now()
-        #verle_list = overall_verle(verle_list, [0, delta_t / 2, delta_t])[0]
+        verle_list = overall_verle(verle_list, [0, delta_t / 2, delta_t])[0]
         #verle_list = overall_verle_threading(verle_list, [0, delta_t / 2, delta_t])[0]
         #verle_list = overall_verle_multiprocessing(verle_list, [0, delta_t / 2, delta_t])[0]
         #verle_list = overall_verle_cython(verle_list, [0, delta_t / 2, delta_t])[0]
-        verle_list = overall_verle_opencl(verle_list, [0, delta_t / 2, delta_t])[0]
-        #1/0
+        #verle_list = overall_verle_opencl(verle_list, [0, delta_t / 2, delta_t])[0]
         print("Verle iteration: {}".format(datetime.datetime.now() - start_time))
 
         #start_time = datetime.datetime.now()
@@ -102,7 +101,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         #print("Odeint iteration: {}".format(datetime.datetime.now() - start_time))
 
         self.particleList = to_particle_list(odeint_list, self.particleList)
-        self.particleListV = to_particle_list(verle_list, self.particleListV)
+        self.particleListV = to_particle_list(verle_list_, self.particleListV)
 
         metric = .0
 
