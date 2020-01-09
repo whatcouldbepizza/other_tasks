@@ -47,19 +47,6 @@ def update_speed(
         particles[t_i][p_i][3] += (acceleration_list[p_i][1] + new_acceleration_list[p_i][1]) / 2 * delta_t
 
 
-def copy_to_next_layer(t_i, p_i_start, p_i_end):
-    """
-    Copying coordinates and speed values to next layer
-    """
-    global particles
-
-    for p_i in range(p_i_start, p_i_end):
-        particles[t_i + 1][p_i][0] = particles[t_i][p_i][0]
-        particles[t_i + 1][p_i][1] = particles[t_i][p_i][1]
-        particles[t_i + 1][p_i][2] = particles[t_i][p_i][2]
-        particles[t_i + 1][p_i][3] = particles[t_i][p_i][3]
-
-
 def one_time_layer_multiprocessing(
     t_i,
     delta_t,
@@ -95,9 +82,6 @@ def one_time_layer_multiprocessing(
 
         args = (t_i, delta_t, p_i_start, p_i_end)
 
-        #processes[i].target = update_speed
-        #processes[i].args = args
-        #processes[i].start()
         curr_process = Process(target=update_speed, args=args)
 
         processes.append(curr_process)
@@ -110,20 +94,11 @@ def one_time_layer_multiprocessing(
         acceleration_list[i] = new_acceleration_list[i]
 
     if t_i < max_len:
-        processes = []
-
-        for i in range(PROCESS_COUNT):
-            p_i_start = i * block
-            p_i_end = (i + 1) * block if i < PROCESS_COUNT - 1 else len(particles[t_i])
-
-            args = (t_i, p_i_start, p_i_end)
-            curr_process = Process(target=copy_to_next_layer, args=args)
-
-            processes.append(curr_process)
-            curr_process.start()
-
-        for proc in processes:
-            proc.join()
+        for p_i in range(len(particles[t_i])):
+            particles[t_i + 1][p_i][0] = particles[t_i][p_i][0]
+            particles[t_i + 1][p_i][1] = particles[t_i][p_i][1]
+            particles[t_i + 1][p_i][2] = particles[t_i][p_i][2]
+            particles[t_i + 1][p_i][3] = particles[t_i][p_i][3]
 
 
 def overall_verle_multiprocessing(particleList, tGrid):

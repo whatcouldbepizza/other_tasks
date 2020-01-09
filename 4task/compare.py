@@ -3,7 +3,10 @@ import json
 
 import numpy as np
 import datetime
+import time
 import matplotlib.pyplot as plt
+
+from numpy.random import uniform
 
 from calculations import supercopy, to_particle_list, overall_odeint, overall_verle
 from calculations_threading import overall_verle_threading
@@ -93,6 +96,21 @@ def initialize_solar_system(data_file="solar_system.json"):
     return particleList
 
 
+def generate_random_particles(count):
+    result = []
+
+    for _ in range(count):
+        p = Particle(
+            coordinates=[uniform(-100, 100), uniform(-100, 100)],
+            speed=[uniform(-100, 100), uniform(-100, 100)],
+            mass=uniform(10 ** 3, 10 ** 5)
+        )
+
+        result.append(p)
+
+    return result
+
+
 def compare_accuracy():
     solar_system = initialize_solar_system()
 
@@ -126,7 +144,7 @@ def compare_accuracy():
         metric_vo = .0
 
         for p_o, p_v, p_vt, p_vm, p_vc, p_vo in zip(odeint_list[t], verle_list[t], verle_list_t[t],
-                                        verle_list_m[t], verle_list_c[t], verle_list_o[t]):
+                                                    verle_list_m[t], verle_list_c[t], verle_list_o[t]):
             dist_v = (np.array(p_o[:2]) - np.array(p_v[:2]))
             dist_vt = (np.array(p_o[:2]) - np.array(p_vt[:2]))
             dist_vm = (np.array(p_o[:2]) - np.array(p_vm[:2]))
@@ -155,6 +173,41 @@ def compare_accuracy():
     plt.show()
 
 
+def compare_performance():
+    counts = [10, 20]
+    labels = ['Verle', 'Threading', 'Multiprocessing', 'Cython', 'OpenCL']
+
+    m_lists = {
+        overall_verle: [],
+        overall_verle_threading: [],
+        overall_verle_multiprocessing: [],
+        overall_verle_cython: [],
+        overall_verle_opencl: []
+    }
+
+    tGrid = np.linspace(0, 5, 500)
+
+    for count in counts:
+        particleList = generate_random_particles(count)
+
+        for i, method in enumerate(m_lists.keys()):
+            start_time = time.time()
+            particle_list = method(supercopy(particleList), tGrid)[1]
+            total = time.time() - start_time
+
+            m_lists[method].append(total)
+
+            print(labels[i] + " done computing " + str(count) + ": " + str(total))
+
+    for i, lst in zip(range(len(labels)), m_lists.values()):
+        plt.plot(counts, lst, label=labels[i])
+
+    plt.legend()
+    plt.show()
+
+
 if __name__ == "__main__":
     if sys.argv[1] == "acc":
         compare_accuracy()
+    elif sys.argv[1] == "perf":
+        compare_performance()
