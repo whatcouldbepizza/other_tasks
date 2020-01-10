@@ -5,7 +5,7 @@ import ctypes
 import numpy as np
 
 
-PROCESS_COUNT = 3
+PROCESS_COUNT = 4
 
 particles = None
 p_masses = None

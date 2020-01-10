@@ -3,7 +3,7 @@ from calculations import particles_to_arrays, get_acceleration_verle
 import threading
 
 
-THREAD_COUNT = 3
+THREAD_COUNT = 4
 
 
 def update_coords(
@@ -42,15 +42,15 @@ def update_speed(
         particles[t_i][p_i][3] += (acceleration_list[p_i][1] + new_acceleration_list[p_i][1]) / 2 * delta_t
 
 
-def copy_to_next_layer(particles, t_i, p_i_start, p_i_end):
-    """
-    Copying coordinates and speed values to next layer
-    """
-    for p_i in range(p_i_start, p_i_end):
-        particles[t_i + 1][p_i][0] = particles[t_i][p_i][0]
-        particles[t_i + 1][p_i][1] = particles[t_i][p_i][1]
-        particles[t_i + 1][p_i][2] = particles[t_i][p_i][2]
-        particles[t_i + 1][p_i][3] = particles[t_i][p_i][3]
+# def copy_to_next_layer(particles, t_i, p_i_start, p_i_end):
+#     """
+#     Copying coordinates and speed values to next layer
+#     """
+#     for p_i in range(p_i_start, p_i_end):
+#         particles[t_i + 1][p_i][0] = particles[t_i][p_i][0]
+#         particles[t_i + 1][p_i][1] = particles[t_i][p_i][1]
+#         particles[t_i + 1][p_i][2] = particles[t_i][p_i][2]
+#         particles[t_i + 1][p_i][3] = particles[t_i][p_i][3]
 
 
 def one_time_layer_threading(
@@ -104,20 +104,25 @@ def one_time_layer_threading(
         acceleration_list[i] = new_acceleration_list[i]
 
     if t_i < max_len:
-        threads = []
+        # threads = []
 
-        for i in range(THREAD_COUNT):
-            p_i_start = i * block
-            p_i_end = (i + 1) * block if i < THREAD_COUNT - 1 else len(particles[t_i])
+        # for i in range(THREAD_COUNT):
+        #     p_i_start = i * block
+        #     p_i_end = (i + 1) * block if i < THREAD_COUNT - 1 else len(particles[t_i])
 
-            args = (particles, t_i, p_i_start, p_i_end)
-            curr_thread = threading.Thread(target=copy_to_next_layer, args=args)
+        #     args = (particles, t_i, p_i_start, p_i_end)
+        #     curr_thread = threading.Thread(target=copy_to_next_layer, args=args)
 
-            threads.append(curr_thread)
-            curr_thread.start()
+        #     threads.append(curr_thread)
+        #     curr_thread.start()
 
-        for thread in threads:
-            thread.join()
+        # for thread in threads:
+        #     thread.join()
+        for p_i in range(len(particles[t_i])):
+            particles[t_i + 1][p_i][0] = particles[t_i][p_i][0]
+            particles[t_i + 1][p_i][1] = particles[t_i][p_i][1]
+            particles[t_i + 1][p_i][2] = particles[t_i][p_i][2]
+            particles[t_i + 1][p_i][3] = particles[t_i][p_i][3]
 
 
 def overall_verle_threading(particleList, tGrid):

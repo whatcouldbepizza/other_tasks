@@ -173,8 +173,8 @@ def compare_accuracy():
     plt.show()
 
 
-def compare_performance():
-    counts = [10, 20]
+def compare_performance_1():
+    counts = [100, 200, 400]
     labels = ['Verle', 'Threading', 'Multiprocessing', 'Cython', 'OpenCL']
 
     m_lists = {
@@ -202,7 +202,64 @@ def compare_performance():
     for i, lst in zip(range(len(labels)), m_lists.values()):
         plt.plot(counts, lst, label=labels[i])
 
+    plt.xlabel('time')
+    plt.ylabel('nodes')
     plt.legend()
+
+    plt.show()
+
+
+def compare_performance_2():
+    counts = [100, 200, 400]
+    labels = ['Verle', 'Threading', 'Multiprocessing', 'Cython', 'OpenCL']
+
+    m_lists = {
+        overall_verle: [],
+        overall_verle_threading: [],
+        overall_verle_multiprocessing: [],
+        overall_verle_cython: [],
+        overall_verle_opencl: []
+    }
+
+    tGrid = np.linspace(0, 5, 100)
+
+    for count in counts:
+        particleList = generate_random_particles(count)
+
+        for i, method in enumerate(m_lists.keys()):
+            times = []
+
+            for it in range(5):
+                start_time = time.time()
+                particle_list = method(supercopy(particleList), tGrid)[1]
+                total = time.time() - start_time
+
+                times.append(total)
+
+                print(labels[i] + " computed " + str(it + 1) + " iteration for " + str(count) + ": " + str(total))
+
+            av = sum(times) / len(times)
+            m_lists[method].append(av)
+
+            print(labels[i] + " done computing " + str(count) + ", average: " + str(av))
+
+    for method in m_lists.keys():
+        if method == overall_verle:
+            continue
+
+        for i in range(len(counts)):
+            m_lists[method][i] = m_lists[overall_verle][i] / m_lists[method][i]
+
+    for i, lst in zip(range(len(labels)), m_lists.values()):
+        if i == 0:
+            continue
+
+        plt.plot(counts, lst, label=labels[i])
+
+    plt.xlabel('speedup')
+    plt.ylabel('nodes')
+    plt.legend()
+
     plt.show()
 
 
@@ -210,4 +267,5 @@ if __name__ == "__main__":
     if sys.argv[1] == "acc":
         compare_accuracy()
     elif sys.argv[1] == "perf":
-        compare_performance()
+        #compare_performance_1()
+        compare_performance_2()
